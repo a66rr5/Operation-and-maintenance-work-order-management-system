@@ -38,13 +38,13 @@
 
 ## 安装与运行
 
-### 1. 克隆项目
+ 1. 克隆项目
 
 ```bash
 git clone [https://github.com/a66rr5/Operation-and-maintenance-work-order-management-system.git](https://github.com/a66rr5/Operation-and-maintenance-work-order-management-system.git)
 cd Operation-and-maintenance-work-order-management-system
 
-2. 创建并激活虚拟环境
+ 2. 创建并激活虚拟环境
 Bash
 
 # 对于 Windows
