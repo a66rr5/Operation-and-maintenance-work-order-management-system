@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card mt-4">
+    <div class="card-header">
+        <h3>{{ title }}</h3>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            {{ form.hidden_tag() }}
+            <div class="mb-3">
+                {{ form.ticket_type.label(class="form-label") }}
+                {{ form.ticket_type(class="form-select") }}
+                {% if form.ticket_type.errors %}
+                    <div class="text-danger">
+                        {% for error in form.ticket_type.errors %}{{ error }}{% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="mb-3">
+                {{ form.description.label(class="form-label") }}
+                {{ form.description(class="form-control", rows=5) }}
+                {% if form.description.errors %}
+                    <div class="text-danger">
+                        {% for error in form.description.errors %}{{ error }}{% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="mb-3">
+                {{ form.status.label(class="form-label") }}
+                {{ form.status(class="form-select") }}
+                {% if form.status.errors %}
+                    <div class="text-danger">
+                        {% for error in form.status.errors %}{{ error }}{% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="mb-3">
+                {{ form.handler.label(class="form-label") }}
+                {{ form.handler(class="form-select") }}
+                {% if form.handler.errors %}
+                    <div class="text-danger">
+                        {% for error in form.handler.errors %}{{ error }}{% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            {# 新增处理地点和报障人字段 #}
+            <div class="mb-3">
+                {{ form.location.label(class="form-label") }}
+                {{ form.location(class="form-control", placeholder="请输入处理地点") }}
+                {% if form.location.errors %}
+                    <div class="text-danger">
+                        {% for error in form.location.errors %}{{ error }}{% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="mb-3">
+                {{ form.reporter.label(class="form-label") }}
+                {{ form.reporter(class="form-control", placeholder="请输入报障人姓名") }}
+                {% if form.reporter.errors %}
+                    <div class="text-danger">
+                        {% for error in form.reporter.errors %}{{ error }}{% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            {# 结束新增 #}
+            {{ form.submit(class="btn btn-primary") }}
+            <a href="{{ url_for('tickets') }}" class="btn btn-secondary ms-2">取消</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

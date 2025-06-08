@@ -1,0 +1,96 @@
+/* static/css/style.css */
+
+/* 通用 body 样式，用于确保布局高度 */
+body {
+    font-family: Arial, sans-serif;
+    color: #343a40;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* 确保body至少占满整个视口高度 */
+}
+
+/* 默认页面背景（非登录页） */
+.default-page-background {
+    background-color: #f0f2f5; /* 浅灰色，比纯白更柔和 */
+    /* 如果所有页面都有通用背景图，可以在这里设置 */
+}
+
+/* 登录页面背景 */
+.login-page-background {
+    background-image: url('../images/1.jpg'); /* 替换为你的图片路径 */
+    background-size: cover; /* 覆盖整个区域 */
+    background-position: center; /* 图片居中 */
+    background-repeat: no-repeat; /* 不重复 */
+    background-attachment: fixed; /* 背景图固定，不随滚动条滚动 */
+    /* 在这里移除 body 的 padding-top，因为登录页不需要，并让导航栏上方的背景图正常显示 */
+    padding-top: 0;
+}
+
+/* 导航栏颜色 */
+.custom-navbar-color {
+    background-color: #343a40 !important; /* 深灰色，与你的图片更接近 */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* 添加一点阴影，增加层次感 */
+}
+
+/* 调整导航栏文字颜色以适应新的背景 */
+.custom-navbar-color .navbar-brand,
+.custom-navbar-color .nav-link {
+    color: #ecf0f1 !important; /* 浅灰色文字 */
+}
+
+.custom-navbar-color .nav-link:hover {
+    color: #ffffff !important; /* 鼠标悬停时变为白色 */
+}
+
+/* 登录页内容包裹器，用于确保登录框在页面（包括导航栏下方的空间）垂直居中 */
+.login-content-wrapper {
+    flex-grow: 1; /* 占据 base.html 中 container 的所有可用空间 */
+    /* 由于 login-page-background 已经设置了 display: flex 和 align-items: center/justify-content: center */
+    /* 这里的 flex-grow: 1 确保它能撑开高度 */
+     /* --- 新增：向下移动 --- */
+    margin-top: 100px; /* 示例值：向下移动 50 像素。你可以根据需要调整这个值 */
+    /* --- 结束新增 --- */
+}
+
+/* 隐藏 ID 列 */
+.hidden-column {
+    display: none !important; /* 使用 !important 确保覆盖其他样式 */
+}
+
+/* 调整登录框的样式，使其在背景图上清晰可见 */
+.login-container {
+    background-color: rgba(255, 255, 255, 0.9); /* 半透明白色背景，让背景图可见 */
+    padding: 30px;
+    border-radius: 10px; /* 稍微大一点的圆角 */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* 更明显的阴影 */
+    width: 100%;
+    max-width: 420px; /* 控制登录框最大宽度，略微加大 */
+    transition: transform 0.3s ease-in-out; /* 添加动画效果 */
+}
+
+.login-container:hover {
+    transform: translateY(-5px); /* 鼠标悬停时向上轻微移动 */
+}
+
+/* 确保主要内容区域不会被导航栏遮挡，以及在非登录页面的容器样式 */
+.main-content-container {
+    padding-top: 1.5rem; /* 对应 Bootstrap 的 mt-4，留出导航栏空间 */
+    flex-grow: 1; /* 确保它能占据剩余高度 */
+}
+
+/* 解决工单列表“说明”列文字超出问题 */
+.ticket-description-cell {
+    white-space: normal; /* 允许文本换行 */
+    word-wrap: break-word; /* 强制长单词在单词内部断行 */
+    overflow-wrap: break-word; /* 现代浏览器推荐使用此属性 */
+    max-width: 200px; /* 可选：设置一个最大宽度，防止列过宽 */
+}
+
+/* 确保表格背景是半透明或不透明，以便内容清晰可见 */
+.card, .table-responsive, table {
+    background-color: rgba(255, 255, 255, 0.9); /* 半透明白色背景 */
+}
+.table-dark {
+    background-color: rgba(33, 37, 41, 0.9) !important; /* 表头也可能需要半透明，强制覆盖 Bootstrap 默认 */
+}

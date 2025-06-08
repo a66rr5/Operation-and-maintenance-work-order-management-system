@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工单管理 - 工单管理系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+
+<body class="default-page-background">
+    <nav class="navbar navbar-expand-lg navbar-dark custom-navbar-color">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">运维工单管理系统</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/users">用户管理</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    {% if current_user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link disabled" href="#">欢迎, {{ current_user.username }}</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout">登出</a>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/login">登录</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/register">注册</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4 main-content-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show flash-message" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>工单列表</h2>
+            <div class="d-flex">
+                {% if current_user.is_authenticated %}
+                <a href="/ticket/new" class="btn btn-primary me-2">新增工单</a>
+                {% endif %}
+                <a href="/tickets/export_excel" class="btn btn-success me-2">导出 Excel</a>
+                {% if current_user.is_authenticated and current_user.role == 'admin' %}
+                <button type="button" class="btn btn-danger" id="bulkDeleteBtn">批量删除</button>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                工单查询
+            </div>
+            <div class="card-body">
+                <form method="GET" action="/tickets" id="ticketSearchForm">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label for="search_type" class="form-label">工单类型</label>
+                            <select class="form-select" id="search_type" name="ticket_type">
+                                <option value="">所有类型</option>
+                                {% for value, label in ticket_types_choices %}
+                                <option value="{{ value }}" {% if current_ticket_type_filter == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="search_status" class="form-label">工单情况</label>
+                            <select class="form-select" id="search_status" name="status">
+                                <option value="">所有情况</option>
+                                {% for value, label in ticket_status_choices %}
+                                <option value="{{ value }}" {% if current_status_filter == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="search_handler" class="form-label">处理人</label>
+                            <input type="text" class="form-control" id="search_handler" name="handler" value="{{ current_handler_filter if current_handler_filter else '' }}" placeholder="输入处理人姓名">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="search_location" class="form-label">处理地点</label>
+                            <input type="text" class="form-control" id="search_location" name="location" value="{{ current_location_filter if current_location_filter else '' }}" placeholder="输入处理地点">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="search_reporter" class="form-label">报障人</label>
+                            <input type="text" class="form-control" id="search_reporter" name="reporter" value="{{ current_reporter_filter if current_reporter_filter else '' }}" placeholder="输入报障人">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="start_date" class="form-label">创建日期（起始）</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date" value="{{ request.args.get('start_date', '') }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="end_date" class="form-label">创建日期（结束）</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date" value="{{ request.args.get('end_date', '') }}">
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100 me-2">查询</button>
+                            <a href="/tickets" class="btn btn-outline-secondary w-100">重置</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if tickets.items %}
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered" id="ticketsTable">
+                <thead class="table-dark">
+                    <tr>
+                        <th style="width: 30px;">
+                            <input type="checkbox" id="checkAll">
+                        </th>
+                        <th class="hidden-column">ID</th>
+                        <th>类型</th>
+                        <th class="ticket-description-cell">说明</th>
+                        <th>情况</th>
+                        <th>处理人</th>
+                        <th>处理地点</th>
+                        <th>报障人</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ticket in tickets.items %}
+                    <tr>
+                        <td>
+                            <input type="checkbox" class="ticket-checkbox" value="{{ ticket.id }}">
+                        </td>
+                        <td class="hidden-column">{{ ticket.id }}</td>
+                        <td>{{ ticket.ticket_type }}</td>
+                        <td class="ticket-description-cell">{{ ticket.description }}</td>
+                        <td>
+                            {% if ticket.status == '待处理' %}
+                                <span class="badge bg-warning text-dark">{{ ticket.status }}</span>
+                            {% elif ticket.status == '处理中' %}
+                                <span class="badge bg-info text-dark">{{ ticket.status }}</span>
+                            {% elif ticket.status == '已解决' %}
+                                <span class="badge bg-success">{{ ticket.status }}</span>
+                            {% elif ticket.status == '已关闭' %}
+                                <span class="badge bg-secondary">{{ ticket.status }}</span>
+                            {% else %}
+                                <span class="badge bg-primary">{{ ticket.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ ticket.handler.username if ticket.handler else '未分配' }}</td>
+                        <td>{{ ticket.location }}</td>
+                        <td>{{ ticket.reporter }}</td>
+                        <td>{{ ticket.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>
+                            <a href="/ticket/edit/{{ ticket.id }}" class="btn btn-sm btn-info me-2">编辑</a>
+                            {% if current_user.is_authenticated and current_user.role == 'admin' %}
+                            <form action="/ticket/delete/{{ ticket.id }}" method="POST" style="display:inline;" onsubmit="return confirm('确定要删除这条工单吗？');">
+                                <button type="submit" class="btn btn-sm btn-danger delete-btn">删除</button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <nav aria-label="Page navigation" class="mt-4">
+            {% set args = request.args.copy() %}
+            {# 从 args 中移除 'page' 参数，避免重复 #}
+            {% if 'page' in args %}
+                {% do args.pop('page') %}
+            {% endif %}
+            <ul class="pagination justify-content-center">
+                <li class="page-item {% if not tickets.has_prev %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('tickets', page=tickets.prev_num, **args) }}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                {% for page_num in tickets.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                    {% if page_num %}
+                        {% if tickets.page == page_num %}
+                            <li class="page-item active" aria-current="page"><a class="page-link" href="#">{{ page_num }}</a></li>
+                        {% else %}
+                            <li class="page-item"><a class="page-link" href="{{ url_for('tickets', page=page_num, **args) }}">{{ page_num }}</a></li>
+                        {% endif %}
+                    {% else %}
+                        <li class="page-item disabled"><a class="page-link" href="#">...</a></li>
+                    {% endif %}
+                {% endfor %}
+                <li class="page-item {% if not tickets.has_next %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('tickets', page=tickets.next_num, **args) }}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        {% else %}
+        <div class="alert alert-info" role="alert">
+            没有找到符合条件的工单。
+        </div>
+        {% endif %}
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // 全选/取消全选功能及批量删除按钮的事件绑定
+                function setupBulkDeleteListeners() {
+                    const checkAll = document.getElementById('checkAll');
+                    const ticketCheckboxes = document.querySelectorAll('.ticket-checkbox');
+                    const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+
+                    if (checkAll) {
+                        // 确保移除旧的监听器以避免重复绑定
+                        checkAll.removeEventListener('change', handleCheckAllChange);
+                        checkAll.addEventListener('change', handleCheckAllChange);
+                    }
+                    ticketCheckboxes.forEach(checkbox => {
+                        checkbox.removeEventListener('change', handleTicketCheckboxChange);
+                        checkbox.addEventListener('change', handleTicketCheckboxChange);
+                    });
+                    if (bulkDeleteBtn) {
+                        bulkDeleteBtn.removeEventListener('click', handleBulkDeleteClick);
+                        bulkDeleteBtn.addEventListener('click', handleBulkDeleteClick);
+                    }
+                }
+
+                function handleCheckAllChange() {
+                    const ticketCheckboxes = document.querySelectorAll('.ticket-checkbox');
+                    ticketCheckboxes.forEach(checkbox => {
+                        checkbox.checked = this.checked;
+                    });
+                }
+
+                function handleTicketCheckboxChange() {
+                    const checkAll = document.getElementById('checkAll');
+                    const ticketCheckboxes = document.querySelectorAll('.ticket-checkbox');
+                    if (checkAll) {
+                        checkAll.checked = Array.from(ticketCheckboxes).every(cb => cb.checked);
+                    }
+                }
+
+                function handleBulkDeleteClick() {
+                    const ticketCheckboxes = document.querySelectorAll('.ticket-checkbox');
+                    const selectedTicketIds = Array.from(ticketCheckboxes)
+                        .filter(checkbox => checkbox.checked)
+                        .map(checkbox => checkbox.value);
+
+                    if (selectedTicketIds.length === 0) {
+                        alert('请选择至少一条要删除的工单！');
+                        return;
+                    }
+
+                    if (confirm('确定要批量删除这 ' + selectedTicketIds.length + ' 条工单吗？此操作不可逆！')) {
+                        fetch('/tickets/bulk_delete', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ ids: selectedTicketIds })
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                // 尝试解析错误响应，如果服务器返回了 JSON 错误信息
+                                return response.json().then(err => { throw new Error(err.message || '网络响应不正常'); });
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.status === 'success') {
+                                alert(data.message);
+                                // 强制刷新页面，解决批量删除后不立即刷新的问题
+                                window.location.reload();
+                            } else {
+                                alert('批量删除失败: ' + (data.message || '未知错误'));
+                            }
+                        })
+                        .catch(error => {
+                            console.error('批量删除请求错误:', error);
+                            alert('批量删除请求过程中发生错误: ' + error.message);
+                        });
+                    }
+                }
+
+                let lastUpdateTime = null;
+
+                function getTicketFilters() {
+                    const params = new URLSearchParams(window.location.search);
+                    const filters = {};
+                    for (const [key, value] of params.entries()) {
+                        filters[key] = value;
+                    }
+                    return filters;
+                }
+
+                function refreshTicketList() {
+                    const currentFilters = getTicketFilters();
+                    let refreshUrl = '/tickets';
+
+                    const queryParams = new URLSearchParams(currentFilters).toString();
+                    if (queryParams) {
+                        refreshUrl += '?' + queryParams;
+                    }
+
+                    fetch(refreshUrl, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('网络请求失败');
+                        }
+                        return response.text();
+                    })
+                    .then(html => {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+
+                        const newTableResponsive = doc.querySelector('.table-responsive');
+                        const newPagination = doc.querySelector('.pagination');
+                        const newNoTicketsAlert = doc.querySelector('.alert-info');
+                        const newSearchForm = doc.querySelector('#ticketSearchForm');
+
+
+                        const oldTableResponsive = document.querySelector('.table-responsive');
+                        const oldPagination = document.querySelector('.pagination');
+                        const oldNoTicketsAlert = document.querySelector('.alert-info');
+                        const oldSearchForm = document.querySelector('#ticketSearchForm');
+
+
+                        // 更新表格内容
+                        if (newTableResponsive && oldTableResponsive) {
+                            oldTableResponsive.innerHTML = newTableResponsive.innerHTML;
+                        } else if (newTableResponsive && !oldTableResponsive) {
+                            document.querySelector('.container').insertAdjacentElement('beforeend', newTableResponsive);
+                            if (oldNoTicketsAlert) oldNoTicketsAlert.remove();
+                        } else if (!newTableResponsive && oldTableResponsive) {
+                            oldTableResponsive.remove();
+                            if (oldPagination) oldPagination.remove();
+                            if (newNoTicketsAlert && !oldNoTicketsAlert) {
+                                document.querySelector('.container').insertAdjacentElement('beforeend', newNoTicketsAlert);
+                            }
+                        }
+
+                        // 更新分页
+                        if (newPagination && oldPagination) {
+                            oldPagination.innerHTML = newPagination.innerHTML;
+                        } else if (newPagination && !oldPagination && oldTableResponsive) {
+                            oldTableResponsive.insertAdjacentElement('afterend', newPagination);
+                        } else if (!newPagination && oldPagination) {
+                            oldPagination.remove();
+                        }
+
+                        // 更新“没有工单”的提示
+                        if (newNoTicketsAlert) {
+                            if (!oldNoTicketsAlert) {
+                                document.querySelector('.container').insertAdjacentElement('beforeend', newNoTicketsAlert);
+                            } else {
+                                oldNoTicketsAlert.innerHTML = newNoTicketsAlert.innerHTML;
+                            }
+                        } else if (oldNoTicketsAlert) {
+                            oldNoTicketsAlert.remove();
+                        }
+
+                        // 重新填充筛选表单的值，确保筛选条件保持不变
+                        if (newSearchForm && oldSearchForm) {
+                            const newSearchParams = new URLSearchParams(newSearchForm.action.split('?')[1] || '');
+
+                            oldSearchForm.querySelectorAll('input, select').forEach(input => {
+                                const name = input.name;
+                                if (name) {
+                                    const newValue = newSearchParams.get(name) || '';
+                                    if (input.type === 'checkbox' || input.type === 'radio') {
+                                        input.checked = (newValue === input.value);
+                                    } else {
+                                        input.value = newValue;
+                                    }
+                                }
+                            });
+                        }
+
+
+                        // 重新绑定事件监听器
+                        setupBulkDeleteListeners();
+
+                        console.log('工单列表已刷新。');
+                    })
+                    .catch(error => {
+                        console.error('刷新工单列表失败:', error);
+                    });
+                }
+
+                function checkForUpdates() {
+                    fetch('/tickets/check_for_updates')
+                        .then(response => response.json())
+                        .then(data => {
+                            const currentLatestUpdateTime = data.last_updated;
+
+                            if (currentLatestUpdateTime && lastUpdateTime && currentLatestUpdateTime !== lastUpdateTime) {
+                                console.log('检测到工单更新，正在刷新列表...');
+                                refreshTicketList();
+                            }
+                            lastUpdateTime = currentLatestUpdateTime;
+                        })
+                        .catch(error => {
+                            console.error('检查更新失败:', error);
+                        });
+                }
+
+                // 页面加载时获取初始的最新更新时间
+                fetch('/tickets/check_for_updates')
+                    .then(response => response.json())
+                    .then(data => {
+                        lastUpdateTime = data.last_updated;
+                        console.log('初始最新更新时间:', lastUpdateTime);
+                    })
+                    .catch(error => console.error('获取初始更新时间失败:', error));
+
+
+                // 每隔 5 秒检查一次更新（可以根据需求调整间隔）
+                setInterval(checkForUpdates, 5000);
+
+                // 页面加载时也调用一次，确保事件监听器绑定
+                setupBulkDeleteListeners();
+            });
+        </script>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/scripts.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const flashMessages = document.querySelectorAll('.flash-message');
+            flashMessages.forEach(message => {
+                setTimeout(() => {
+                    const bootstrapAlert = bootstrap.Alert.getInstance(message) || new bootstrap.Alert(message);
+                    bootstrapAlert.close();
+                }, 3000); // 3000 毫秒 = 3 秒
+            });
+        });
+    </script>
+</body>
+</html>

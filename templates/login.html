@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{# 重写 body_class 块，为登录页设置特定背景类 #}
+{% block body_class %}class="login-page-background"{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-center align-items-center login-content-wrapper"> {# 新增 login-content-wrapper 类 #}
+    <div class="login-container">
+        <h2 class="text-center mb-4">系统登录</h2>
+        <form method="POST">
+            {{ form.hidden_tag() }}
+            <div class="mb-3">
+                {{ form.username.label(class="form-label") }}
+                {{ form.username(class="form-control", placeholder="请输入用户名") }}
+                {% if form.username.errors %}
+                    <div class="text-danger">
+                        {% for error in form.username.errors %}{{ error }}{% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="mb-3">
+                {{ form.password.label(class="form-label") }}
+                {{ form.password(class="form-control", placeholder="请输入密码") }}
+                {% if form.password.errors %}
+                    <div class="text-danger">
+                        {% for error in form.password.errors %}{{ error }}{% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="mb-3 form-check">
+                {{ form.remember_me(class="form-check-input") }}
+                {{ form.remember_me.label(class="form-check-label") }}
+            </div>
+            {{ form.submit(class="btn btn-primary w-100") }}
+        </form>
+        <p class="text-center mt-3">
+            <a href="{{ url_for('register') }}">注册新用户</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

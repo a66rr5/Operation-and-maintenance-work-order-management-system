@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+.venv/  # 您的虚拟环境目录
+venv/   # 另一个常见的虚拟环境目录名
+
+# Flask
+instance/
+.flaskenv
+
+# Database
+*.db     # 例如，您的SQLite数据库文件 (site.db)
+/migrations/versions/ # 迁移历史记录，通常只包含在主分支
+
+# Logs
+*.log
+
+# Editor/IDE files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS generated files
+.DS_Store
+Thumbs.db
