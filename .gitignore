@@ -1,30 +1,58 @@
-# Python
+### **2. `.gitignore` 文件内容**
+
+`git add .` 后，Git 会尝试跟踪您项目中的所有文件。`.gitignore` 文件用于告诉 Git 哪些文件或目录应该被忽略，不应该被版本控制。这对于敏感信息、自动生成的文件和本地开发环境文件尤为重要。
+
+请在您的项目根目录（`D:\ticket_management_system\ticket_management_system`）下创建一个名为 `.gitignore` 的文件，并将以下内容复制进去：
+
+```gitignore
+# Python 相关
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 .Python
 env/
-.venv/  # 您的虚拟环境目录
-venv/   # 另一个常见的虚拟环境目录名
+.venv/                  # 您的虚拟环境目录
+venv/                   # 另一种常见的虚拟环境目录名
+pip-log.txt
+pip-delete-this-directory.txt
 
-# Flask
-instance/
-.flaskenv
+# Flask 相关
+instance/               # Flask 实例文件夹，通常包含 sqlite 数据库和敏感配置
+.flaskenv               # Flask 开发环境环境变量文件
 
-# Database
-*.db     # 例如，您的SQLite数据库文件 (site.db)
-/migrations/versions/ # 迁移历史记录，通常只包含在主分支
+# 数据库
+*.db                    # 例如 SQLite 数据库文件 (如 site.db)
+/migrations/versions/   # Alembic 迁移的历史版本文件 (通常只在主分支上管理，不让其他分支提交新的版本)
+# 如果您使用其他数据库，如 PostgreSQL 或 MySQL，连接凭据通常通过环境变量管理，数据库文件本身不需要忽略
 
-# Logs
+# 日志文件
 *.log
+*.log.*
 
-# Editor/IDE files
-.vscode/
-.idea/
+# IDE 和编辑器相关文件
+.vscode/                # VS Code 配置
+.idea/                  # IntelliJ IDEA/PyCharm 配置
 *.sublime-project
 *.sublime-workspace
+.DS_Store               # macOS 系统文件
+Thumbs.db               # Windows 缩略图缓存
+.project
+.directory
+.settings/
 
-# OS generated files
-.DS_Store
-Thumbs.db
+# 编译和临时文件
+*.tmp
+*.bak
+*.swp
+*.~
+
+# 操作系统生成文件
+ehthumbs.db
+Desktop.ini
+
+# PyInstaller / Nuitka
+# for PyInstaller:
+# build/
+# dist/
+# *.spec

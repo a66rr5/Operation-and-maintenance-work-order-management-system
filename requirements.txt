@@ -1,0 +1,10 @@
+Flask>=3.0.0
+Flask-Login>=0.6.0
+Flask-SQLAlchemy>=3.1.0
+Flask-Migrate>=4.0.0
+openpyxl>=3.1.2
+SQLAlchemy>=2.0.0 # 保持与 Flask-SQLAlchemy 兼容的较高版本
+Werkzeug>=3.0.0 # 保持与 Flask 兼容的较高版本
+Flask-WTF>=1.2.0
+WTForms>=3.0.0
+gunicorn>=22.0.0 # 用于生产环境部署
